@@ -1,0 +1,31 @@
+{
+  "name": "tfgm-mcp",
+  "version": "0.1.0",
+  "description": "Read-only TerraFirmaGreg Modern quests, recipes and field guide MCP server",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tfgm-mcp": "dist/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "node --import tsx src/server.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "smoke": "npm run build && node --import tsx scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "cheerio": "^1.1.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
