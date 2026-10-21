@@ -138,24 +138,22 @@ scripts/smoke.ts   真实数据冒烟验证
 
 Actions 页面也可手动运行 **Publish to npm**：默认 `dry_run=true` 仅验证并上传工作流产物，不发布。真实发布需要填写已存在的版本标签，并关闭 dry run。日常 push 不触发 npm 发布。
 
-### 首次认证
+### npm Trusted Publishing（不使用 Token）
 
-1. npm 账号必须拥有 `powercess` 组织下创建/发布包的权限。
-2. 在 npm 创建短期 Granular Access Token，Packages and scopes 选择 `@powercess`，允许 **Read and write (publish and stage)**，启用 **Bypass 2FA** 用于无人值守首次发布。仅赋予组织管理权限不能代替包发布权限。
-3. 在 GitHub 仓库 Settings → Secrets and variables → Actions 添加 Repository secret：`NPM_TOKEN`。只在 GitHub 保存值，不提交到代码或聊天。
-4. 发布 GitHub Release，或在 Actions 中手动发布已存在的版本标签。
+工作流只使用 GitHub OIDC，不读取 NPM_TOKEN，也不需要在 GitHub 保存 npm 密钥。
 
-### 后续改用 Trusted Publishing
+由有权管理 npm 包的账号，在 npm 包 Settings → Trusted Publisher 中填写：
 
-包创建后，在 npm 包 Settings → Trusted Publisher 中填写：
-
+- npm 包：`@powercess/tfgm-mcp`
 - Provider：GitHub Actions
-- Organization or user：`TerraFirmaGreg-Translation-CN`
+- Organization or user：`TerraFirmaGreg-Translation-CN`（这里填 GitHub 组织，不是 npm 的 powercess）
 - Repository：`tfgm-mcp`
 - Workflow filename：`publish.yml`
 - Environment：留空
 - Allowed actions：允许直接 `npm publish`
 
-工作流已配置 OIDC 权限和 provenance；配置完成后可移除 GitHub 的 `NPM_TOKEN`，后续版本通过 OIDC 发布。首次配置应及时用于下一次发布，遵循 npm 当前的有效期要求。
+npm 账号必须有 powercess 组织的建包/发布权限。工作流已配置 OIDC 权限和 provenance。新授权需按 npm 的有效期要求及时完成首次成功发布。
 
-参考：[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) · [npm Token 配置](https://docs.npmjs.com/creating-and-viewing-access-tokens/)。
+如果首次建包时 npm 页面尚未提供包设置或 Trusted Publisher 入口，需要先解决 npm 的首次建包流程，再运行正式发布；不要把 dry-run 成功当作已获得 npm 发布权限。
+
+参考：[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/)。

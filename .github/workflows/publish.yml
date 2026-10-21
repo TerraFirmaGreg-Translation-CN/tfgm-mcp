@@ -69,8 +69,6 @@ jobs:
       - name: Publish to npmjs
         if: env.DRY_RUN != 'true'
         env:
-          # First publication can use this secret; subsequent releases can use OIDC.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           TARBALL: ${{ steps.package.outputs.tarball }}
           DIST_TAG: ${{ steps.package.outputs.dist_tag }}
         run: npm publish "./artifacts/$TARBALL" --access public --provenance --tag "$DIST_TAG"
