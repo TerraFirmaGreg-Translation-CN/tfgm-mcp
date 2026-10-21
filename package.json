@@ -1,8 +1,7 @@
 {
-  "name": "tfgm-mcp",
+  "name": "@powercess/tfgm-mcp",
   "version": "0.1.0",
   "description": "Read-only TerraFirmaGreg Modern quests, recipes and field guide MCP server",
-  "private": true,
   "type": "module",
   "bin": {
     "tfgm-mcp": "dist/server.js"
@@ -16,7 +15,8 @@
     "dev": "node --import tsx src/server.ts",
     "test": "node --import tsx --test tests/*.test.ts",
     "check": "tsc --noEmit -p tsconfig.json",
-    "smoke": "npm run build && node --import tsx scripts/smoke.ts"
+    "smoke": "npm run build && node --import tsx scripts/smoke.ts",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
@@ -27,5 +27,29 @@
     "@types/node": "^22.19.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TerraFirmaGreg-Translation-CN/tfgm-mcp.git"
+  },
+  "homepage": "https://github.com/TerraFirmaGreg-Translation-CN/tfgm-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/TerraFirmaGreg-Translation-CN/tfgm-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "minecraft",
+    "terrafirmagreg",
+    "tfg",
+    "recipes",
+    "quests"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

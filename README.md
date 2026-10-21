@@ -34,7 +34,20 @@ node dist/server.js
 }
 ```
 
-不同客户端的配置入口可能不同；核心是 `command`、`args` 和可选的环境变量。项目尚未发布到 npm，不能直接用远程 `npx tfgm-mcp` 安装。
+不同客户端的配置入口可能不同；核心是 `command`、`args` 和可选的环境变量。npm 包名为 `@powercess/tfgm-mcp`。首次 GitHub Actions 发布成功后，可以改用以下配置：
+
+```json
+{
+  "mcpServers": {
+    "tfgm": {
+      "command": "npx",
+      "args": ["-y", "@powercess/tfgm-mcp@0.1.0"]
+    }
+  }
+}
+```
+
+也可执行 `npm install -g @powercess/tfgm-mcp`，之后用 `tfgm-mcp` 启动。
 
 可以让 AI 尝试：
 
@@ -116,3 +129,33 @@ scripts/smoke.ts   真实数据冒烟验证
 ```
 
 完整上游数据、生成产物和缓存不提交到仓库。本项目不宣称拥有上游文本、配方或游戏素材的版权；若后续打包分发上游素材，应单独核对其授权条件。
+
+## GitHub Actions 发布到 npm
+
+工作流：`.github/workflows/publish.yml`。包发布到 npm 组织 `powercess`，GitHub 源码仓库仍为 `TerraFirmaGreg-Translation-CN/tfgm-mcp`。
+
+发布正式 GitHub Release（例如 `v0.1.0`）会自动触发：核对版本 → 安装依赖 → 类型检查与测试 → 编译打包 → 隔离安装与 MCP 验证 → npm 发布。正式版本使用 `latest`，带预发布后缀的版本使用 `next`。发布的版本号必须与 package.json 和锁文件完全一致。
+
+Actions 页面也可手动运行 **Publish to npm**：默认 `dry_run=true` 仅验证并上传工作流产物，不发布。真实发布需要填写已存在的版本标签，并关闭 dry run。日常 push 不触发 npm 发布。
+
+### 首次认证
+
+1. npm 账号必须拥有 `powercess` 组织下创建/发布包的权限。
+2. 在 npm 创建短期 Granular Access Token，Packages and scopes 选择 `@powercess`，允许 **Read and write (publish and stage)**，启用 **Bypass 2FA** 用于无人值守首次发布。仅赋予组织管理权限不能代替包发布权限。
+3. 在 GitHub 仓库 Settings → Secrets and variables → Actions 添加 Repository secret：`NPM_TOKEN`。只在 GitHub 保存值，不提交到代码或聊天。
+4. 发布 GitHub Release，或在 Actions 中手动发布已存在的版本标签。
+
+### 后续改用 Trusted Publishing
+
+包创建后，在 npm 包 Settings → Trusted Publisher 中填写：
+
+- Provider：GitHub Actions
+- Organization or user：`TerraFirmaGreg-Translation-CN`
+- Repository：`tfgm-mcp`
+- Workflow filename：`publish.yml`
+- Environment：留空
+- Allowed actions：允许直接 `npm publish`
+
+工作流已配置 OIDC 权限和 provenance；配置完成后可移除 GitHub 的 `NPM_TOKEN`，后续版本通过 OIDC 发布。首次配置应及时用于下一次发布，遵循 npm 当前的有效期要求。
+
+参考：[npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) · [npm Token 配置](https://docs.npmjs.com/creating-and-viewing-access-tokens/)。

@@ -1,0 +1,76 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag (e.g. v0.1.0). Optional for dry runs.'
+        type: string
+        required: false
+      dry_run:
+        description: 'Validate and package without publishing to npm'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Ensure npm supports trusted publishing
+        run: npm install --global npm@11.21.0
+      - name: Validate release version
+        id: package
+        run: node scripts/release-check.mjs
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - name: Build release tarball
+        run: |
+          mkdir -p artifacts
+          npm pack --pack-destination artifacts
+      - name: Test installed tarball
+        env:
+          TARBALL: ${{ steps.package.outputs.tarball }}
+        run: node scripts/test-package.mjs "artifacts/$TARBALL"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: artifacts/*.tgz
+          if-no-files-found: error
+      - name: Dry-run npm publication
+        if: env.DRY_RUN == 'true'
+        env:
+          TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "./artifacts/$TARBALL" --access public --dry-run
+      - name: Publish to npmjs
+        if: env.DRY_RUN != 'true'
+        env:
+          # First publication can use this secret; subsequent releases can use OIDC.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL: ${{ steps.package.outputs.tarball }}
+          DIST_TAG: ${{ steps.package.outputs.dist_tag }}
+        run: npm publish "./artifacts/$TARBALL" --access public --provenance --tag "$DIST_TAG"
